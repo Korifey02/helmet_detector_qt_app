@@ -1,96 +1,145 @@
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from torchvision.io import read_image
-from torchvision.transforms import Compose, Resize, ToPILImage
-
-from PySide6.QtWidgets import QMainWindow, QFileDialog
+from PySide6.QtWidgets import QMainWindow, QFileDialog, QButtonGroup
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtCore import Qt
 
-
 from ui_mainwindow import Ui_MainWindow
-from model_utils.model import HelmetRecognitionModel, prepare_image, recognise
+from model import HelmetRecognitionModel
+from image_manager import ImageManager
 
 
 class MainWindow(QMainWindow):
+    __BASE_PLACEHOLDER = 'res/before_load_image.png'
+    __APP_ICON = 'res/worker.ico'
+    __APP_TITLE = 'Распознание рабочих в касках'
+
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setWindowIcon(QIcon('res/worker.ico'))
-        self.setWindowTitle('Распознание рабочих в касках')
 
+        # visual app init
+        self.setWindowIcon(QIcon(self.__APP_ICON))
+        self.setWindowTitle(self.__APP_TITLE)
         self.reset_visual()
 
-        # self.model = HelmetRecognitionModel()
-        self.image_path = ''
+        # classes initialisation
+        self.model = HelmetRecognitionModel()
+        self.image_manager = ImageManager()
+        # self.model = None
 
-        self.ui.actionOpenPhoto.triggered.connect(self.open_image_dialog)
-        self.ui.onRecognitionBtnClick.clicked.connect(self.run_recognition)
-        # code
+        # for BLAS selection
+        self.ui.mklBlasBtn.toggled.connect(lambda: self.radio_button_click(self.ui.mklBlasBtn))
+        self.ui.openBlasBtn.toggled.connect(lambda: self.radio_button_click(self.ui.openBlasBtn))
+        self.ui.blisBlasBtn.toggled.connect(lambda: self.radio_button_click(self.ui.blisBlasBtn))
+
+        # for open photo/video triggers connection
+        self.ui.actionOpenPhoto.triggered.connect(self.open_image_button_click)
+
+        # button triggers
+        self.ui.onRecognitionBtnClick.clicked.connect(self.recognition_button_click)
+        self.ui.onCleanBtnClick.clicked.connect(self.clean_button_click)
+
+        # init radio buttons
+        self.__init_radio_buttons()
+        # disable recognition button
+        self.ui.onRecognitionBtnClick.setDisabled(True)
+
+        # local variables
+        self.__input_image_path = ''
+        self.__blas_selected = False
+
         self.show()
 
-    def reset_visual(self):
-        pixmap = QPixmap('res/image_416px.png')
-        pixmap = pixmap.scaled(416, 416, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
-        self.ui.inputPhotoLabel.setPixmap(pixmap)
-        self.ui.inputPhotoLabel.setScaledContents(True)
-        self.ui.outputPhotoLabel.setPixmap(pixmap)
-        self.ui.outputPhotoLabel.setScaledContents(True)
+    def radio_button_click(self, radio_button):
+        """
+        Листенер нажатия на любую radio button, по выбору BLAS версии
+        :param radio_button:
+        :return:
+        """
+        if radio_button.isChecked():
+            selected_model_version = radio_button.text()
+            self.model.set_model_version(selected_model_version)
+            self.__blas_selected = True
+            self.__check_button_disabled()
 
-    def open_image_dialog(self):
+    def open_image_button_click(self):
+        """
+        Листенер диалогового окна по нажатию на открытие фото
+        :return:
+        """
         file_path, _ = QFileDialog.getOpenFileName(self, "Выберите изображение", "",
-                                                  "Image Files (*.png *.jpg *.jpeg)")
-        self.image_path = file_path
+                                                   "Image Files (*.png *.jpg *.jpeg)")
+        self.__input_image_path = file_path
         if file_path:
-            self.load_image(file_path)
+            self.__set_image_into_label(file_path, self.ui.inputPhotoLabel)
+        self.__check_button_disabled()
 
-    def load_image(self, file_path: str):
+    @staticmethod
+    def __set_image_into_label(file_path: str, label):
+        """
+        Загрузка фото в передаваемый label
+        :param file_path:
+        :param label:
+        :return:
+        """
         pixmap = QPixmap(file_path)
         pixmap = pixmap.scaled(416, 416, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
-        self.ui.inputPhotoLabel.setPixmap(pixmap)
-        self.ui.inputPhotoLabel.setScaledContents(True)  # Масштабировать изображение по размеру QLabel
+        label.setPixmap(pixmap)
+        label.setScaledContents(True)
 
-    def run_recognition(self):
-        image = prepare_image(self.image_path)
-        prediction = recognise(self.model, image)
+    def recognition_button_click(self):
+        """
+        Обрабтчик нажатия на кнопку проверки
+        :return:
+        """
+        inference_input = self.image_manager.inference_input(self.__input_image_path)
+        prediction = self.model.inference(inference_input)
+        result_file_path = self.image_manager.get_figured_output(self.__input_image_path, prediction)
+        self.__set_image_into_label(result_file_path, self.ui.outputPhotoLabel)
 
-        transforms = Compose([
-            Resize((416, 416)),  # Используйте те же размеры, что и при обучении
-        ])
-        image = read_image(self.image_path).float() / 255  # Загрузка и нормализация изображения
-        image = transforms(image)
+    def clean_button_click(self):
+        """
+        Обработчик нажатия на кнопку очищения
+        :return:
+        """
+        self.__input_image_path = ''
+        self.__blas_selected = False
+        self.reset_visual()
+        self.__uncheck_all_radio_buttons()
+        self.ui.onRecognitionBtnClick.setDisabled(True)
 
-        image = ToPILImage()(image)
-        fig, ax = plt.subplots(1)
-        ax.imshow(image)
-        ax.axis('off')  # Отключение осей
+    def reset_visual(self):
+        """
+        Установка базовых картинок в label фото
+        :return:
+        """
+        self.__set_image_into_label(self.__BASE_PLACEHOLDER, self.ui.inputPhotoLabel)
+        self.__set_image_into_label(self.__BASE_PLACEHOLDER, self.ui.outputPhotoLabel)
 
-        for i in range(len(prediction[0]['boxes'])):
-            box = prediction[0]['boxes'][i].numpy()
-            score = prediction[0]['scores'][i].numpy()
-            label = prediction[0]['labels'][i].numpy()
+    def __init_radio_buttons(self):
+        """
+        Создаем группу кнопок из радиобатонов, по выбору BLAS
+        :return:
+        """
+        self.button_group = QButtonGroup(self)
+        self.button_group.addButton(self.ui.blisBlasBtn)
+        self.button_group.addButton(self.ui.mklBlasBtn)
+        self.button_group.addButton(self.ui.openBlasBtn)
 
-            # Пример фильтрации предсказаний по уверенности и вывода информации
-            if score > 0.5:  # Порог уверенности
-                print(f"SURE Box: {box}, Score: {score}, Label: {label}")
-                xmin, ymin, xmax, ymax = box[0], box[1], box[2], box[3]
-                rect = patches.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
-                                         linewidth=1, edgecolor='r', facecolor='none')
-                ax.add_patch(rect)
-                # todo подпись в зависимости от класса
-                plt.text(xmin, ymin, 'helmet' if label == 1 else 'head', color='white',
-                         bbox=dict(facecolor='red', edgecolor='none', boxstyle='round,pad=0.2'))
+    def __uncheck_all_radio_buttons(self):
+        """
+        Очищаю выбранную пользователем BLAS версию
+        :return:
+        """
+        self.button_group.setExclusive(False)
+        for radioButton in self.button_group.buttons():
+            radioButton.setChecked(False)
+        self.button_group.setExclusive(True)
 
-        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
-        output_filename = "result.png"
-        plt.savefig('aaa.png', bbox_inches='tight', pad_inches=0)
-
-        # fig.savefig('aaa.png')
-        plt.close(fig)
-
-        pixmap = QPixmap('aaa.png')
-        pixmap = pixmap.scaled(416, 416, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
-        self.ui.outputPhotoLabel.setPixmap(pixmap)
-        self.ui.outputPhotoLabel.setScaledContents(True)
-
+    def __check_button_disabled(self):
+        """
+        Проверка на доступность кнопку для инеференса
+        :return:
+        """
+        if self.__input_image_path and self.__blas_selected:
+            self.ui.onRecognitionBtnClick.setEnabled(True)
