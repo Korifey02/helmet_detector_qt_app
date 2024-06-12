@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QGroupBox,
     QHBoxLayout, QLabel, QMainWindow, QMenu,
     QMenuBar, QPushButton, QRadioButton, QSizePolicy,
     QSpacerItem, QStatusBar, QVBoxLayout, QWidget)
+import images_rc
+import images_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -28,6 +30,9 @@ class Ui_MainWindow(object):
         MainWindow.resize(900, 667)
         MainWindow.setMinimumSize(QSize(860, 667))
         MainWindow.setMaximumSize(QSize(900, 667))
+        icon = QIcon()
+        icon.addFile(u":/images/res/worker.ico", QSize(), QIcon.Normal, QIcon.Off)
+        MainWindow.setWindowIcon(icon)
         self.action_2 = QAction(MainWindow)
         self.action_2.setObjectName(u"action_2")
         self.actionOpenPhoto = QAction(MainWindow)
@@ -44,6 +49,7 @@ class Ui_MainWindow(object):
         self.inputPhotoLabel.setObjectName(u"inputPhotoLabel")
         self.inputPhotoLabel.setMinimumSize(QSize(416, 416))
         self.inputPhotoLabel.setMaximumSize(QSize(416, 416))
+        self.inputPhotoLabel.setPixmap(QPixmap(u":/images/res/before_load_image.png"))
         self.inputPhotoLabel.setAlignment(Qt.AlignCenter)
 
         self.horizontalLayout_2.addWidget(self.inputPhotoLabel)
@@ -56,6 +62,7 @@ class Ui_MainWindow(object):
         self.outputPhotoLabel.setObjectName(u"outputPhotoLabel")
         self.outputPhotoLabel.setMinimumSize(QSize(416, 416))
         self.outputPhotoLabel.setMaximumSize(QSize(416, 416))
+        self.outputPhotoLabel.setPixmap(QPixmap(u":/images/res/before_load_image.png"))
         self.outputPhotoLabel.setAlignment(Qt.AlignCenter)
 
         self.horizontalLayout_2.addWidget(self.outputPhotoLabel)
@@ -168,12 +175,12 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"\u0420\u0430\u0441\u043f\u043e\u0437\u043d\u0430\u043d\u0438\u0435 \u0440\u0430\u0431\u043e\u0447\u0438\u0445 \u0432 \u043a\u0430\u0441\u043a\u0430\u0445", None))
         self.action_2.setText(QCoreApplication.translate("MainWindow", u"\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0432\u0438\u0434\u0435\u043e", None))
         self.actionOpenPhoto.setText(QCoreApplication.translate("MainWindow", u"\u0424\u043e\u0442\u043e", None))
         self.actionOpenVideo.setText(QCoreApplication.translate("MainWindow", u"\u0412\u0438\u0434\u0435\u043e", None))
-        self.inputPhotoLabel.setText(QCoreApplication.translate("MainWindow", u"\u0417\u0434\u0435\u0441\u044c \u043c\u043e\u0433\u043b\u0430 \u0431\u044b \u0431\u044b\u0442\u044c \u0432\u0430\u0448\u0430 \u0440\u0435\u043a\u043b\u0430\u043c\u0430", None))
-        self.outputPhotoLabel.setText(QCoreApplication.translate("MainWindow", u"\u0417\u0434\u0435\u0441\u044c \u043c\u043e\u0433\u043b\u0430 \u0431\u044b \u0431\u044b\u0442\u044c \u0432\u0430\u0448\u0430 \u0440\u0435\u043a\u043b\u0430\u043c\u0430", None))
+        self.inputPhotoLabel.setText("")
+        self.outputPhotoLabel.setText("")
         self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"\u0412\u044b\u0431\u0435\u0440\u0435\u0442\u0435 BLAS \u0438\u043c\u043f\u043b\u0435\u043c\u0435\u043d\u0442\u0430\u0446\u0438\u044e", None))
         self.mklBlasBtn.setText(QCoreApplication.translate("MainWindow", u"MKL", None))
         self.openBlasBtn.setText(QCoreApplication.translate("MainWindow", u"OpenBLAS", None))

@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="images">
+    <file>../res/worker.ico</file>
+    <file>../res/before_load_image.png</file>
+  </qresource>
+</RCC>

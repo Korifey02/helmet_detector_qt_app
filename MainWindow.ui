@@ -23,7 +23,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Распознание рабочих в касках</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="assets/images.qrc">
+    <normaloff>:/images/res/worker.ico</normaloff>:/images/res/worker.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -44,7 +48,10 @@
          </size>
         </property>
         <property name="text">
-         <string>Здесь могла бы быть ваша реклама</string>
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap resource="assets/images.qrc">:/images/res/before_load_image.png</pixmap>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -79,7 +86,10 @@
          </size>
         </property>
         <property name="text">
-         <string>Здесь могла бы быть ваша реклама</string>
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap resource="assets/images.qrc">:/images/res/before_load_image.png</pixmap>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -268,6 +278,9 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="assets/images.qrc"/>
+  <include location="images.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -8,19 +8,12 @@ from image_manager import ImageManager
 
 
 class MainWindow(QMainWindow):
-    __BASE_PLACEHOLDER = 'res/before_load_image.png'
-    __APP_ICON = 'res/worker.ico'
-    __APP_TITLE = 'Распознание рабочих в касках'
+    __BASE_PLACEHOLDER = ':/images/res/before_load_image.png'
 
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
-        # visual app init
-        self.setWindowIcon(QIcon(self.__APP_ICON))
-        self.setWindowTitle(self.__APP_TITLE)
-        self.reset_visual()
 
         # classes initialisation
         self.model = HelmetRecognitionModel()
@@ -74,19 +67,6 @@ class MainWindow(QMainWindow):
             self.__set_image_into_label(file_path, self.ui.inputPhotoLabel)
         self.__check_button_disabled()
 
-    @staticmethod
-    def __set_image_into_label(file_path: str, label):
-        """
-        Загрузка фото в передаваемый label
-        :param file_path:
-        :param label:
-        :return:
-        """
-        pixmap = QPixmap(file_path)
-        pixmap = pixmap.scaled(416, 416, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
-        label.setPixmap(pixmap)
-        label.setScaledContents(True)
-
     def recognition_button_click(self):
         """
         Обрабтчик нажатия на кнопку проверки
@@ -115,6 +95,19 @@ class MainWindow(QMainWindow):
         """
         self.__set_image_into_label(self.__BASE_PLACEHOLDER, self.ui.inputPhotoLabel)
         self.__set_image_into_label(self.__BASE_PLACEHOLDER, self.ui.outputPhotoLabel)
+
+    @staticmethod
+    def __set_image_into_label(file_path: str, label):
+        """
+        Загрузка фото в передаваемый label
+        :param file_path:
+        :param label:
+        :return:
+        """
+        pixmap = QPixmap(file_path)
+        pixmap = pixmap.scaled(416, 416, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        label.setPixmap(pixmap)
+        label.setScaledContents(True)
 
     def __init_radio_buttons(self):
         """
